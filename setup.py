@@ -24,6 +24,7 @@ def _make_ext(name: str, sources: list) -> Pybind11Extension:
         include_dirs=[POMDP_NATIVE_INCLUDE],
         cxx_std=17,
         extra_compile_args=["-O3", "-fno-math-errno"],
+        define_macros=[("_USE_MATH_DEFINES", None)]
     )
 
 
