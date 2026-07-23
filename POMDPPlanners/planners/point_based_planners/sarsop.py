@@ -1,13 +1,14 @@
 import numpy as np
 from POMDPPlanners.core.environment import Environment
-from POMDPPlanners.core.policy import Policy
-from typing import Optional
+from POMDPPlanners.core.environment.environment import SpaceType
+from POMDPPlanners.core.policy import Policy, PolicySpaceInfo
+from typing import List, Optional
 from pathlib import Path
 
 class SARSOPPlanner(Policy):
     def __init__(
         self,
-        environment:Environment,
+        environment:"Environment",
         discount_factor: float,
         epsilon_convergence: float,
         maximun_iteration: int,
@@ -18,8 +19,8 @@ class SARSOPPlanner(Policy):
         log_path:Optional[Path]=None,
         use_queue_logger:bool=False
     ):
-        #MAKE all the check about the possible errors
-        super.__init__(
+
+        super().__init__(
             environment = environment,
             discount_factor=discount_factor,
             name=name,
@@ -32,10 +33,36 @@ class SARSOPPlanner(Policy):
         self.maximun_iteration=maximun_iteration
         self.delta_threshold=delta_threshold
         self.time_out_in_seconds=time_out_in_seconds
+        self.alpha_vectors: List[np.ndarray] = []
 
-    def initialize_gamma(self):
+        self.compatibility_check()
+        self.initialize_alpha()
+
+    def compatibility_check(self):
+        if self.environment.reward_range is None:
+            raise ValueError(
+                f"Policy {self.name} is not compatible with the environment {self.environment.name} because the policy requires the environment to have a defined reward range. Please use an environment with a defined reward range."
+            )
+        if self.environment.__getattribute__("states") is None:
+            raise ValueError(
+                f"Policy {self.name} is not compatible with the environment {self.environment.name} because the policy requires the environment to have a defined state space."
+            )
+
+    @classmethod
+    def get_space_info(cls) -> PolicySpaceInfo:
+        return PolicySpaceInfo(action_space=SpaceType.DISCRETE, observation_space=SpaceType.MIXED)
+
+    def initialize_alpha(self):
         """Initializes the lower-bound alpha-vector set with a blind policy vector."""
-        #S_size = self.environment.
-        #min_reward = min(self.pomdp['min_reward'])
-        #alpha_init = np.full(S_size, min_reward / (1 - self.gamma))
-        #return [alpha_init]
+
+        state_size = len(self.environment.__getattribute__("states"))
+        min_reward = min(self.environment.reward_range) # type: ignore
+
+        #TODO: evaluate if the alphavector should be a class on its own, or if it should be a numpy array.
+        alpha_init = np.full(state_size, min_reward / (1 - self.discount_factor))
+        self.alpha_vectors = [alpha_init]
+
+    def plan(self):
+        """Plans a policy using the SARSOP algorithm."""
+        return 
+
