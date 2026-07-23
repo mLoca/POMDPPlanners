@@ -34,6 +34,9 @@ ENV/
 *.swo
 .DS_Store
 
+#TMP for temporary files
+tmp/
+
 # Testing
 .coverage
 htmlcov/
